@@ -1,15 +1,20 @@
 import React, { useEffect, useRef } from 'react';
-import { Cesium, Viewer } from 'cesium';
-import satellite from 'satellite.js';
+import * as Cesium from'cesium';
+import * as satellite from 'satellite.js';
 
 const SatelliteTracker = () => {
     const viewerRef = useRef(null);
 
-    useEffect = (() => {
-        viewerRef.current = new Viewer('cesiumContainer', {
-            animation: false,
-            timeline: false,
+    useEffect(() => {
+        viewerRef.current = new Cesium.Viewer('cesiumContainer', {
+            imageryProvider: new Cesium.TileMapServiceImageryProvider({
+            url: Cesium.buildModuleUrl("Assets/Textures/NaturalEarthII"),
+        }),
+        baseLayerPicker: false, geocoder: false, homeButton: false, infoBox: false,
+        navigationHelpButton: false, sceneModePicker: false
         });
+
+        viewerRef.scene.globe.enableLighting = true;
 
         const updateSatellitePosition = () => {
             // ISS (ZARYA) Two-line Element Set data
@@ -24,7 +29,7 @@ const SatelliteTracker = () => {
 
             // ECI: Earth-Centered Inertial Coordinates
             const positionEci = positionAndVelocity.position;
-            const gmst = satellite.gmst(date);
+            const gmst = satellite.gstime(date);
 
             // Positional data (Geodetic)
             const positionGd = satellite.eciToGeodetic(positionEci, gmst);
@@ -33,8 +38,8 @@ const SatelliteTracker = () => {
             const attitude = positionGd.height;
 
             viewerRef.current.entities.add({
-                position: Cesium.Cartesian.fromDegress(longitude, latitude, attitude),
-                point: { pixelSize: 10, color: Cesium.color.Red},
+                position: Cesium.Cartesian3.fromDegrees(longitude, latitude, attitude),
+                point: { pixelSize: 10, color: Cesium.Color.RED },
             });
         };
 
